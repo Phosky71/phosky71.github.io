@@ -59,25 +59,46 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const data   = params.get('data');
-
+    const storeUrl = 'https://play.google.com/store/apps/details?id=com.phosky.impostorpersonalizadof';
+  
     if (!data) {
       document.getElementById('msg').textContent = 'Enlace no válido.';
       document.getElementById('open-btn').style.display = 'none';
     } else {
-      const customScheme = 'impostorapp://grupo?data=' + encodeURIComponent(data);
-      document.getElementById('open-btn').href = customScheme;
-
+      // intent:// fuerza la apertura desde WebViews de WhatsApp/Facebook
+      const intentUrl = 'intent://grupo?data=' + encodeURIComponent(data)
+        + '#Intent;scheme=impostorapp;package=com.phosky.impostorpersonalizadof;'
+        + 'S.browser_fallback_url=' + encodeURIComponent(storeUrl) + ';end';
+  
+      const httpsUrl = 'https://phosky71.github.io/grupo?data=' + encodeURIComponent(data);
+  
       document.getElementById('open-btn').addEventListener('click', function(e) {
         e.preventDefault();
-        window.location = customScheme;
-
-        // Si tras 2.5s no se abrió la app → mostrar botón de descarga
+  
+        // En WhatsApp/WebView usa intent://, en Chrome usa https://
+        const isWebView = /wv|WebView/.test(navigator.userAgent)
+          || /FBAN|FBAV|Instagram/.test(navigator.userAgent)
+          || document.referrer.includes('android-app://com.whatsapp');
+  
+        window.location = isWebView ? intentUrl : httpsUrl;
+  
+        // Fallback por si nada funciona
         setTimeout(() => {
           document.getElementById('msg').textContent = '¿No tienes la app instalada?';
           document.getElementById('store-btn').style.display = 'inline-block';
         }, 2500);
       });
+  
+      // Intento automático al cargar (sin botón) para Chrome
+      if (!isInWebView()) {
+        window.location = httpsUrl;
+      }
     }
-  </script>
+  
+    function isInWebView() {
+      return /wv|WebView/.test(navigator.userAgent)
+        || document.referrer.includes('android-app://com.whatsapp');
+    }
+</script>
 </body>
 </html>
