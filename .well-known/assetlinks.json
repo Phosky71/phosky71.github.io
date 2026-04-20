@@ -1,7 +1,7 @@
 [{
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
-    "namespace": "impostor",
+    "namespace": "android_app",
     "package_name": "com.phosky.impostorpersonalizadof",
     "sha256_cert_fingerprints": [
       "50:D0:95:F1:55:B8:BB:1A:18:DB:B1:7A:8F:3C:E0:DF:68:06:47:F7:53:5E:AF:B4:E4:79:93:A9:BA:CE:CF:EB"
