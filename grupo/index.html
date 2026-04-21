@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impostor Party — Importar grupo</title>
+  <style>
+    body {
+      font-family: -apple-system, sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      text-align: center;
+      padding: 20px;
+    }
+    .emoji { font-size: 72px; margin-bottom: 16px; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    p  { color: #aaa; margin-bottom: 24px; max-width: 300px; }
+    .btn {
+      background: #6c63ff;
+      color: #fff;
+      padding: 16px 32px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 16px;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #444;
+      color: #aaa;
+      padding: 12px 24px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-size: 14px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="emoji">🎭</div>
+  <h1>Impostor Party</h1>
+  <p id="msg">Pulsa el botón para importar el grupo directamente en la app.</p>
+
+  <a id="open-btn" href="#" class="btn">Abrir en Impostor Party</a>
+  <br>
+  <a id="store-btn" href="https://play.google.com/store/apps/details?id=com.phosky.impostorpersonalizadof"
+     class="btn-secondary" style="display:none">
+    Descargar la app
+  </a>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const data   = params.get('data');
+    const storeUrl = 'https://play.google.com/store/apps/details?id=com.phosky.impostorpersonalizadof';
+  
+    if (!data) {
+      document.getElementById('msg').textContent = 'Enlace no válido.';
+      document.getElementById('open-btn').style.display = 'none';
+    } else {
+      // intent:// fuerza la apertura desde WebViews de WhatsApp/Facebook
+      const intentUrl = 'intent://?data=' + encodeURIComponent(data)
+        + '#Intent;scheme=impostorapp;package=com.phosky.impostorpersonalizadof;'
+        + 'S.browser_fallback_url=' + encodeURIComponent(storeUrl) + ';end';
+  
+      const httpsUrl = 'https://phosky71.github.io/grupo?data=' + encodeURIComponent(data);
+  
+      document.getElementById('open-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+  
+        // En WhatsApp/WebView usa intent://, en Chrome usa https://
+        const isWebView = /wv|WebView/.test(navigator.userAgent)
+          || /FBAN|FBAV|Instagram/.test(navigator.userAgent)
+          || document.referrer.includes('android-app://com.whatsapp');
+  
+        window.location = isWebView ? intentUrl : httpsUrl;
+  
+        // Fallback por si nada funciona
+        setTimeout(() => {
+          document.getElementById('msg').textContent = '¿No tienes la app instalada?';
+          document.getElementById('store-btn').style.display = 'inline-block';
+        }, 2500);
+      });
+  
+      // Intento automático al cargar (sin botón) para Chrome
+      if (!isInWebView()) {
+        window.location = httpsUrl;
+      }
+    }
+  
+    function isInWebView() {
+      return /wv|WebView/.test(navigator.userAgent)
+        || document.referrer.includes('android-app://com.whatsapp');
+    }
+</script>
+</body>
+</html>
