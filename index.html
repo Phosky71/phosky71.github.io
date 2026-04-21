@@ -47,58 +47,74 @@
 <body>
   <div class="emoji">🎭</div>
   <h1>Impostor Party</h1>
-  <p id="msg">Pulsa el botón para importar el grupo directamente en la app.</p>
+  <p id="msg">Abriendo la app…</p>
 
-  <a id="open-btn" href="#" class="btn">Abrir en Impostor Party</a>
+  <a id="open-btn" href="#" class="btn" style="display:none">
+    Abrir en Impostor Party
+  </a>
   <br>
-  <a id="store-btn" href="https://play.google.com/store/apps/details?id=com.phosky.impostorpersonalizadof"
+  <a id="store-btn"
+     href="https://play.google.com/store/apps/details?id=com.phosky.impostorpersonalizadof"
      class="btn-secondary" style="display:none">
     Descargar la app
   </a>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const data   = params.get('data');
-    const storeUrl = 'https://play.google.com/store/apps/details?id=com.phosky.impostorpersonalizadof';
-  
+    const params   = new URLSearchParams(window.location.search);
+    const data     = params.get('data');
+    const pkg      = 'com.phosky.impostorpersonalizadof';
+    const storeUrl = 'https://play.google.com/store/apps/details?id=' + pkg;
+
     if (!data) {
       document.getElementById('msg').textContent = 'Enlace no válido.';
-      document.getElementById('open-btn').style.display = 'none';
     } else {
-      // intent:// fuerza la apertura desde WebViews de WhatsApp/Facebook
+
+      // ── URL schemes ────────────────────────────────────────────
+      // Custom scheme — funciona siempre si la app está instalada
+      const customUrl = 'impostorapp://?data=' + encodeURIComponent(data);
+
+      // intent:// — fuerza apertura desde WebViews (WhatsApp, Instagram…)
       const intentUrl = 'intent://?data=' + encodeURIComponent(data)
-        + '#Intent;scheme=impostorapp;package=com.phosky.impostorpersonalizadof;'
+        + '#Intent;scheme=impostorapp;package=' + pkg + ';'
         + 'S.browser_fallback_url=' + encodeURIComponent(storeUrl) + ';end';
-  
-      const httpsUrl = 'https://phosky71.github.io/?data=' + encodeURIComponent(data);
-  
-      document.getElementById('open-btn').addEventListener('click', function(e) {
-        e.preventDefault();
-  
-        // En WhatsApp/WebView usa intent://, en Chrome usa https://
-        const isWebView = /wv|WebView/.test(navigator.userAgent)
-          || /FBAN|FBAV|Instagram/.test(navigator.userAgent)
-          || document.referrer.includes('android-app://com.whatsapp');
-  
-        window.location = isWebView ? intentUrl : httpsUrl;
-  
-        // Fallback por si nada funciona
+
+      function isWebView() {
+        const ua = navigator.userAgent;
+        return /wv|WebView/i.test(ua)
+          || /FBAN|FBAV|Instagram/i.test(ua)
+          || document.referrer.includes('android-app://com.whatsapp')
+          || document.referrer.includes('android-app://org.telegram');
+      }
+
+      function tryOpen() {
+        if (isWebView()) {
+          // WebView de WhatsApp/Instagram → intent:// es el único que funciona
+          window.location = intentUrl;
+        } else {
+          // Chrome/Firefox → custom scheme directo
+          window.location = customUrl;
+        }
+
+        // Si tras 2.5s no se ha ido → app no instalada
         setTimeout(() => {
-          document.getElementById('msg').textContent = '¿No tienes la app instalada?';
+          document.getElementById('msg').textContent =
+            '¿No tienes la app instalada?';
+          document.getElementById('open-btn').style.display = 'none';
           document.getElementById('store-btn').style.display = 'inline-block';
         }, 2500);
-      });
-  
-      // Intento automático al cargar (sin botón) para Chrome
-      if (!isInWebView()) {
-        window.location = httpsUrl;
       }
+
+      // Mostrar botón manual por si el auto-open falla
+      const btn = document.getElementById('open-btn');
+      btn.style.display = 'inline-block';
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        tryOpen();
+      });
+
+      // Intento automático al cargar
+      tryOpen();
     }
-  
-    function isInWebView() {
-      return /wv|WebView/.test(navigator.userAgent)
-        || document.referrer.includes('android-app://com.whatsapp');
-    }
-</script>
+  </script>
 </body>
 </html>
